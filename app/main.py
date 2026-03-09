@@ -10,7 +10,7 @@ from .models import TodoCreate, TodoRead, TodoUpdate
 from .service import TodoService
 
 
-app = FastAPI(title="FastAPI TODO CRUD", version="1.0.0")
+app = FastAPI(title="testing FastAPI TODO CRUD", version="1.0.0")
 
 
 def get_todo_service(session: Session = Depends(get_session)) -> TodoService:
