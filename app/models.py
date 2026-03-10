@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Optional
 
+from datetime import datetime
+
 from sqlmodel import Field, SQLModel
 
 
@@ -27,4 +29,14 @@ class Todo(TodoBase, table=True):
 
 class TodoRead(TodoBase):
     id: int
+
+
+class StockEODData(SQLModel):
+    symbol: str
+    date: datetime
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: Optional[float] = None
 
