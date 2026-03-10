@@ -6,8 +6,10 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from sqlmodel import Session
 
 from .database import get_session, init_db
-from .models import TodoCreate, TodoRead, TodoUpdate
+from .models import TodoCreate, TodoRead, TodoUpdate, StockEODData
 from .service import TodoService
+from .stock_service import StockService
+
 
 
 app = FastAPI(title="FastAPI TODO CRUD", version="1.0.0")
@@ -15,6 +17,10 @@ app = FastAPI(title="FastAPI TODO CRUD", version="1.0.0")
 
 def get_todo_service(session: Session = Depends(get_session)) -> TodoService:
     return TodoService(session)
+
+
+def get_stock_service() -> StockService:
+    return StockService()
 
 
 @app.on_event("startup")
@@ -73,5 +79,30 @@ def delete_todo(
             detail="Todo not found",
         )
     return {"detail": "Todo deleted"}
+
+
+@app.get("/stocks/eod/{ticker}", response_model=StockEODData)
+async def get_stock_eod(
+    ticker: str, service: StockService = Depends(get_stock_service)
+) -> StockEODData:
+    from .marketstack_client import MarketstackNotFoundError, MarketstackError
+
+    try:
+        return await service.get_eod_for_symbol(ticker)
+    except MarketstackNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    except MarketstackError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Error fetching stock data from Marketstack.",
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
 
 
